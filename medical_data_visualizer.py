@@ -40,19 +40,24 @@ def draw_heat_map():
         (df['weight'] <= df['weight'].quantile(0.975))
     ]
 
-    # Calculate correlation matrix
+    # Calculate the correlation matrix
     corr = df_heat.corr()
 
-    # Generate mask
+    # Generate a mask for the upper triangle
     mask = np.triu(np.ones_like(corr, dtype=bool))
 
-    # Set up matplotlib figure
+    # Set up the matplotlib figure
     fig, ax = plt.subplots(figsize=(12, 10))
 
-    # Draw heatmap
-    sns.heatmap(corr, mask=mask, annot=True, fmt=".1f", center=0,
-                square=True, linewidths=0.5, cbar_kws={"shrink": 0.5}, ax=ax)
+    # Draw the heatmap
+    sns.heatmap(corr,
+                mask=mask,
+                annot=True,
+                fmt=".1f",
+                center=0,
+                square=True,
+                linewidths=0.5,
+                cbar_kws={"shrink": 0.5},
+                ax=ax)
 
     return fig
-
-
