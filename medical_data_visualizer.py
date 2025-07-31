@@ -3,40 +3,44 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 
-# 1. Import data
-df = pd.read_csv('medical_examination.csv')
 
-# 2. Add 'overweight' column
-df['BMI'] = df['weight'] / ((df['height'] / 100) ** 2)
-df['overweight'] = (df['BMI'] > 25).astype(int)
+# Import data
+df = pd.read_csv("medical_examination.csv")
 
-# 3. Normalize data
+# Add 'overweight' column
+df['overweight'] = ((df['weight'] / ((df['height'] / 100) ** 2)) > 25).astype(int)
+
+# Normalize data by making 0 = good, 1 = bad
 df['cholesterol'] = (df['cholesterol'] > 1).astype(int)
 df['gluc'] = (df['gluc'] > 1).astype(int)
 
 
-# 4. Categorical Plot
+# Draw Categorical Plot
 def draw_cat_plot():
-    # 5. Create DataFrame for cat plot
-    df_cat = pd.melt(df,
-                     id_vars=['cardio'],
-                     value_vars=['cholesterol', 'gluc', 'smoke', 'alco', 'active', 'overweight'])
+    # Create DataFrame for cat plot using pd.melt
+    df_cat = pd.melt(
+        df,
+        id_vars=['cardio'],
+        value_vars=['cholesterol', 'gluc', 'smoke', 'alco', 'active', 'overweight']
+    )
 
-    # 6. Group and reformat data
-    df_cat = df_cat.groupby(['cardio', 'variable', 'value']).size().reset_index(name='total')
+    # Group and reformat the data to split by 'cardio'
+    df_cat = df_cat.value_counts().reset_index(name='total').sort_values(by='variable')
 
-    # 7. Draw the catplot
-    fig = sns.catplot(data=df_cat,
-                      x='variable',
-                      y='total',
-                      hue='value',
-                      col='cardio',
-                      kind='bar').fig
+    # Draw the catplot with 'sns.catplot()'
+    fig = sns.catplot(
+        data=df_cat,
+        kind='bar',
+        x='variable',
+        y='total',
+        hue='value',
+        col='cardio'
+    ).fig
 
     return fig
 
 
-# 8. Heat Map
+# Draw Heat Map
 def draw_heat_map():
     # Clean the data
     df_heat = df[
@@ -56,21 +60,25 @@ def draw_heat_map():
     # Set up the matplotlib figure
     fig, ax = plt.subplots(figsize=(12, 10))
 
-    # Draw the heatmap using ax=ax to bind it to fig
-    sns.heatmap(
-        corr,
-        mask=mask,
-        annot=True,
-        fmt=".1f",
-        center=0,
-        square=True,
-        linewidths=0.5,
-        cbar_kws={"shrink": 0.5},
-        ax=ax  # ✅ Important: bind the plot to the axis
-    )
+    # Plot the heatmap manually using imshow (this ensures an image is created)
+    im = ax.imshow(np.ma.masked_array(corr, mask), cmap='coolwarm', interpolation='nearest')
 
-    return fig  # ✅ This must return the fig object
+    # Add annotations
+    for i in range(len(corr.columns)):
+        for j in range(len(corr.columns)):
+            if not mask[i, j]:
+                ax.text(j, i, f"{corr.iloc[i, j]:.1f}", ha='center', va='center', color='black')
 
+    # Set axis labels and ticks
+    ax.set_xticks(np.arange(len(corr.columns)))
+    ax.set_yticks(np.arange(len(corr.columns)))
+    ax.set_xticklabels(corr.columns, rotation=45, ha='right')
+    ax.set_yticklabels(corr.columns)
 
+    # Adjust layout and colorbar
+    fig.colorbar(im, ax=ax, shrink=0.5)
+    fig.tight_layout()
+
+    return fig
 
 
